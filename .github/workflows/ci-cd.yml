@@ -44,7 +44,7 @@ jobs:
       - name: Deploy Environment via Docker Compose
         run: |
           echo "Desplegando versión con hash de trazabilidad: ${{ github.sha }}"
-          docker-compose up -d --build
+          docker compose up -d --build
           
       - name: Verify Live Deployment Trazability
         run: |
