@@ -13,20 +13,17 @@ jobs:
       - name: Code Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Python Environment
-        uses: actions/setup-python@v5
+      - name: Setup Node.js Environment
+        uses: actions/setup-node@v4
         with:
-          python-version: '3.11'
+          node-version: '20'
+          cache: 'npm'
 
       - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest
+        run: npm ci
 
       - name: Run Unit Tests
-        run: |
-          python -m pytest tests/ --doctest-modules --junitxml=junit/test-results.xml
+        run: npm test
 
       - name: Install Snyk CLI
         run: npm install -g snyk
@@ -47,10 +44,10 @@ jobs:
 
       - name: Deploy Environment via Docker Compose
         run: |
-          echo "Desplegando versión de producción con hash: ${{ github.sha }}"
+          echo "Desplegando versión con hash de trazabilidad: ${{ github.sha }}"
           docker-compose up -d --build
           
       - name: Verify Live Deployment Trazability
         run: |
           docker ps
-          echo "Microservicio desplegado exitosamente."
+          echo "Microservicio Node.js desplegado exitosamente."

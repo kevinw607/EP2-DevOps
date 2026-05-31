@@ -1,6 +1,19 @@
+version: '3.8'
 
 services:
-  servidor-notas:
-    build: .
+  web-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: microservice_node_app
     ports:
       - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    restart: on-failure
+    networks:
+      - app-network
+
+networks:
+  app-network:
+    driver: bridge
