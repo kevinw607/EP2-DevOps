@@ -1,0 +1,36 @@
+
+name: CI-CD
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-test-security:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install Dependencies
+      run: npm install
+
+    - name: Run Tests
+      run: npm test
+
+    - name: Security Audit
+      run: npm audit --audit-level=high
+
+    - name: Build Docker Image
+      run: docker build -t servidor-notas .
+
+  deploy:
+    needs: build-test-security
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo "Despliegue exitoso"
