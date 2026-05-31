@@ -1,36 +1,59 @@
-
-name: CI-CD
+name: CI/CD DevOps Pipeline
 
 on:
   push:
-    branches: [main]
+    branches: [ "main", "develop" ]
   pull_request:
-    branches: [main]
+    branches: [ "main" ]
 
 jobs:
   build-test-security:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
+      - name: Code Checkout
+        uses: actions/checkout@v4
 
-    - uses: actions/setup-node@v4
-      with:
-        node-version: 20
+      - name: Setup Python Environment
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
 
-    - name: Install Dependencies
-      run: npm install
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pytest
 
-    - name: Run Tests
-      run: npm test
+      # Corregido: Llamamos a pytest mediante el módulo de python para evitar el error 127
+      - name: Run Unit Tests
+        run: |
+          python -m pytest tests/ --doctest-modules --junitxml=junit/test-results.xml
 
-    - name: Security Audit
-      run: npm audit --audit-level=high
+      # Corregido: Instalamos el CLI oficial de Snyk directamente para asegurar que el comando exista
+      - name: Install Snyk CLI
+        run: npm install -g snyk
 
-    - name: Build Docker Image
-      run: docker build -t servidor-notas .
+      # Ejecución del escaneo con bloqueo estricto por seguridad (IE3)
+      - name: Run Snyk Security Scan
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+        run: |
+          snyk auth ${{ secrets.SNYK_TOKEN }}
+          snyk test --severity-threshold=high
 
   deploy:
     needs: build-test-security
     runs-on: ubuntu-latest
     steps:
-    - run: echo "Despliegue exitoso"
+      - name: Code Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy Environment via Docker Compose
+        run: |
+          echo "Desplegando versión de producción con hash: ${{ github.sha }}"
+          docker-compose up -d --build
+          
+       Wilk-name: Verify Live Deployment Trazability
+        run: |
+          docker ps
+          echo "Microservicio desplegado exitosamente."
